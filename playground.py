@@ -1,4 +1,4 @@
-from RendPyGame.lib import *
+from UniPygame.lib import *
 import pygame
 
 
