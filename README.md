@@ -56,6 +56,42 @@ As you can see, not terribly different
 
 And however large the amount of Entities and Sprites you add, the ```while running``` loop will always have the same size
 
+## Frame functions
+UniPygame's frame functions is UniPygames way of updating objetcs.
+This example shows with Entities but it will also work for sprites, in the same way
+The way they work is as follows:
+```python
+from UniPygame import Entity
+import pygame
+
+
+
+pygame.init()
+screen = pygame.display.set_mode((1080,720))
+scene = Scene(surf = screen, clear_color = pygame.Color(255,255,255))
+
+#First we define a frame function
+#This function needs a parameter 'self' else it will spit out an error
+def cube_move(self):
+    #Here we move the object that inherites the function downwards
+    #The speed of the object is multiplied by the delta time, so that it always moves by the same amount whatever the fps is
+    self.position.y += 20 * scene.delta_time
+
+#Then we define a object and set the frame_function to the cube_move function
+cube = Entity(scene = scene, color = pygame.Color(255, 0, 0), rect = pygame.Rect(100,100,100,100), frame_function = cube_move)
+
+
+running = True
+scene.Awake()
+while running:
+    if scene.quit_event:
+        pygame.display.quit()
+        running = False
+    
+    #Now, when calling update, the cube_move function will be called
+    scene.Update(fps_limit = 60)
+```
+
 ## UniPygame Input system
 Well, now you might be wondering, since the loop is always the same size, how will inputs work?
 Well for that there is a parameter in the Scene class ``Scene.keydown_listener``, this parameter needs a function into it, this function has to have a keyword argument ``key``, everytime a button is pressed, this argument will be set to the pygame key code of the pressed key, and the function will be called.
