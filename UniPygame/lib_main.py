@@ -136,6 +136,7 @@ class Scene:
         scene._active = False
         return scene
     def switch_to_scene(self, scene):
+        self.surf.fill(Color(0,0,0))
         self.__stored__ = {"surf" : self.surf, "clear_color" : self.clear_color, "isE" : self._in_scene_entities, "isS" : self._in_scene_sprites, "Eido" : self._Eid_offset,
                            "Sido" : self._Eid_offset, "localtime" : self.local_scene_time, "keydown_listener" : self.keydown_listener, "keyup_listener" : self.keyup_listener}
         
