@@ -82,6 +82,7 @@ class Scene:
             self.__checkfunc__(s.awake_function)
             s.awake_function(self = s)
     def Update(self, fps_limit : int = 60):
+        t = time.get_ticks()
         self._clock.tick(fps_limit)
 
         self.frames_per_second = self._clock.get_fps()
@@ -91,7 +92,7 @@ class Scene:
         self.local_scene_time = tm.time() - self._start_time if self._start_time != 0 else 0
         self.total_time = tm.time() - self._start_time
 
-        self.delta_time = tm.time() - self._last
+        self.delta_time = (t - self._last) / 1000.0
         self.held_keys = key.get_pressed()
         
         try: self.surf.fill(self.clear_color)
@@ -122,7 +123,7 @@ class Scene:
             display.flip()
         except Exception as e:
             print(e)
-        self._last = tm.time()
+        self._last = t
 
 def none(self):
     pass

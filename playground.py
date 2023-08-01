@@ -42,7 +42,7 @@ imobj2 = Sprite.Instantiate(imobj1, (200, 200))
 running = True
 
 
-pygame.display.set_caption('RendPyGame Playgroud')
+pygame.display.set_caption('UniPygame Playgroud')
 
 fontsize = 32
 font1 = pygame.font.Font('freesansbold.ttf', fontsize)
