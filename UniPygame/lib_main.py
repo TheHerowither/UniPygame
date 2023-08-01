@@ -1,7 +1,7 @@
 from pygame import surface, Rect, draw, Color, display, time, event, key, font, QUIT, KEYDOWN, KEYUP, SRCALPHA
 from inspect import getfullargspec
-from UniPygame.utils import *
-from UniPygame.exceptions import *
+from unipygame.utils import *
+from unipygame.exceptions import *
 import time as tm
 
 

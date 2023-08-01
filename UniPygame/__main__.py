@@ -1,4 +1,4 @@
-from UniPygame import *
+from unipygame import *
 import pygame
 
 
