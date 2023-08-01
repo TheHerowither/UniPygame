@@ -52,6 +52,6 @@ while running:
     
     scene.Update(fps_limit = 60)
 ```
-As you cam see, not terribly different
+As you can see, not terribly different
 
 And however large the amount of Entities and Sprites you add, the ```while running``` loop will allways have the same size
