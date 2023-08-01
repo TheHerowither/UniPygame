@@ -118,3 +118,7 @@ scene = Scene(surf = screen, clear_color = pygame.Color(255,255,255), keydown_li
 Also, the same works for the keyup event, using the ``Scene.keyup_listener`` parameter.
 
 But if you want continuus button presses, there is a list in the scene ``Scene.held_keys`` where you just have to index the pygame key code of the key you want to check if its pressed/held pressed, and do something with that.
+
+
+
+There are some more functions, these however are documented in the wiki
