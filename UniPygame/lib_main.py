@@ -20,6 +20,7 @@ class Scene:
         self._start_time = 0
         self._create_time = tm.time()
         self._clock = time.Clock()
+        self._active = True
 
         self.local_scene_time = 0
         self.total_time = 0
@@ -82,48 +83,58 @@ class Scene:
             self.__checkfunc__(s.awake_function)
             s.awake_function(self = s)
     def Update(self, fps_limit : int = 60):
-        t = time.get_ticks()
-        self._clock.tick(fps_limit)
+        if self._active:
+            t = time.get_ticks()
+            self._clock.tick(fps_limit)
 
-        self.frames_per_second = self._clock.get_fps()
-        self.fps = self.frames_per_second
-        self.total_frames += 1
+            self.frames_per_second = self._clock.get_fps()
+            self.fps = self.frames_per_second
+            self.total_frames += 1
         
-        self.local_scene_time = tm.time() - self._start_time if self._start_time != 0 else 0
-        self.total_time = tm.time() - self._start_time
+            self.local_scene_time = tm.time() - self._start_time if self._start_time != 0 else 0
+            self.total_time = tm.time() - self._start_time
 
-        self.delta_time = (t - self._last) / 1000.0
-        self.held_keys = key.get_pressed()
+            self.delta_time = (t - self._last) / 1000.0
+            self.held_keys = key.get_pressed()
         
-        try: self.surf.fill(self.clear_color)
-        except: pass
-        for eve in event.get():
-            self.quit_event = eve.type == QUIT
-            if eve.type == KEYDOWN: 
-                self.keydown_listener(key = eve.key)
-                self.keydown = eve.key
-                self.keyup = None
+            try: self.surf.fill(self.clear_color)
+            except: pass
+            for eve in event.get():
+                self.quit_event = eve.type == QUIT
+                if eve.type == KEYDOWN: 
+                    self.keydown_listener(key = eve.key)
+                    self.keydown = eve.key
+                    self.keyup = None
 
-            if eve.type == KEYUP:
-                self.keyup_listener(key = eve.key)
-                self.keyup = eve.key
-                self.keydown = None
-        for e in self._in_scene_entities:
-            self.__checkfunc__(e.frame_function)
-            if e.enabled:
-                e.frame_function(self = e)
-                e.draw(self.surf)
+                if eve.type == KEYUP:
+                    self.keyup_listener(key = eve.key)
+                    self.keyup = eve.key
+                    self.keydown = None
+            for e in self._in_scene_entities:
+                self.__checkfunc__(e.frame_function)
+                if e.enabled:
+                    e.frame_function(self = e)
+                    e.draw(self.surf)
         
-        for s in self._in_scene_sprites:
-            self.__checkfunc__(s.frame_function)
-            if s.enabled:
-                s.frame_function(self = s)
-                s.draw(self.surf)
-        try:
-            display.flip()
-        except Exception as e:
-            print(e)
-        self._last = t
+            for s in self._in_scene_sprites:
+                self.__checkfunc__(s.frame_function)
+                if s.enabled:
+                    s.frame_function(self = s)
+                    s.draw(self.surf)
+            try:
+                display.flip()
+            except Exception as e:
+                print(e)
+            self._last = t
+    def Create_scene(self):
+        "This will create a copy of the scene, use this when creating more than one scene"
+        scene = Scene(surf = self.surf, clear_color = self.clear_color, keydown_listener = self.keydown_listener, keyup_listener = self.keyup_listener)
+        scene._active = False
+        return scene
+    def Switch_to_scene(self, scene):
+        self._active = False
+        scene.Awake()
+        scene._active = True
 
 def none(self):
     pass
