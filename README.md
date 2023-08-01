@@ -6,7 +6,7 @@ It allows you to define single entites and not have to bother with long complica
 ## UniPygame Entities
 A basic rect on the screen, would look like this:
 ```python
-from UnPygame import Scene, Entity
+from UniPygame import Scene, Entity
 import pygame
 
 
@@ -32,7 +32,7 @@ As you might have seen in the example above, an ``Entity`` can only be a ``rect`
 
 If you, however want to add something like an image to a scene, you can use a different class, the ``Sprite``. It would look something like this:
 ```python
-from UnPygame import Scene, Sprite, Vec2
+from UniPygame import Scene, Sprite, Vec2
 import pygame
 
 
