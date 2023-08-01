@@ -5,30 +5,26 @@ requires      = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "realpython-reader"
-version = "1.0.0"
-description = "Read the latest Real Python tutorials"
+name = "unipygame"
+version = "0.1"
+description = "Pygame Unity style Entity system"
 readme = "README.md"
-authors = [{ name = "Real Python", email = "info@realpython.com" }]
+authors = [{ name = "The_Herowither"}]
 license = { file = "LICENSE" }
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
-keywords = ["feed", "reader", "tutorial"]
+keywords = ["pygame", "unity", "addon", "enhancement"]
 dependencies = [
-    "feedparser >= 5.2.0",
-    "html2text",
-    'tomli; python_version < "3.11"',
+    "pygame"
 ]
 requires-python = ">=3.9"
 
-[project.optional-dependencies]
-dev = ["black", "bumpver", "isort", "pip-tools", "pytest"]
 
 [project.urls]
-Homepage = "https://github.com/TheHerowither/UniPygame/tree/main#unipygame-entities"
+Homepage = "https://github.com/TheHerowither/UniPygame/"
 
 [project.scripts]
-realpython = "unipygame.__main__"
+realpython = "unipygame.__main__:main"
