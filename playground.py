@@ -25,11 +25,19 @@ def keydown(key):
         fontsize += 1
     if key == pygame.K_TAB:
         dbg_text.toggle()
+    
+    if key == pygame.K_RETURN:
+        if scene.get_active():
+            scene.switch_to_scene(scene2)
+        if scene2.get_active():
+            scene2.switch_to_scene(scene)
 
 def update_text(self):
     self.image = MultilineTextRender(font1, f"Local scene time: {round(scene.local_scene_time, 3)}\nTotal time: {round(scene.total_time, 3)}\nTotal frames: {scene.total_frames}", pygame.Color(255,255,255), pygame.Color(255, 255, 255, 127))
 
 scene = Scene(surf, keydown_listener = keydown)
+scene2 = scene.create_scene()
+
 
 im1 = pygame.image.load("image.jpg")
 
@@ -37,6 +45,7 @@ im1 = pygame.image.load("image.jpg")
 obj1 = Entity(scene = scene, color = pygame.Color(255,255,255), rect = pygame.Rect(100,100,10,10), frame_funtion = move)
 imobj1 = Sprite(scene = scene, image = im1, position = Vec2(400, 400), frame_function = move)
 
+obj3 = Entity(scene = scene2, color = pygame.Color(255,255,255), rect = pygame.Rect(100,100,10,10), frame_funtion = move)
 
 obj2 = Entity.Instantiate(obj1, (10,10))
 imobj2 = Sprite.Instantiate(imobj1, (200, 200))

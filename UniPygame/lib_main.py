@@ -36,6 +36,9 @@ class Scene:
         self.keydown = None
         self.keyup = None
         self.held_keys = None
+
+        self.__stored__ = {"surf" : self.surf, "clear_color" : self.clear_color, "isE" : self._in_scene_entities, "isS" : self._in_scene_sprites, "Eido" : self._Eid_offset, "Sido" : self._Eid_offset,
+                           "localtime" : self.local_scene_time, "keydown_listener" : self.keydown_listener, "keyup_listener" : self.keyup_listener}
     def __getfreeEid__(self):
         return len(self._in_scene_entities) + self._Eid_offset
     def __getfreeSid__(self):
@@ -73,6 +76,8 @@ class Scene:
         args = getfullargspec(func)[0]
         if "key" not in args:
             raise MissingFunctionParameterError("Missing function keyword parameter 'key'")
+    def get_active(self):
+        return self._active
     def Awake(self):
         "Function to be called right before the loop starts"
         self._start_time = tm.time()
@@ -83,58 +88,71 @@ class Scene:
             self.__checkfunc__(s.awake_function)
             s.awake_function(self = s)
     def Update(self, fps_limit : int = 60):
-        if self._active:
-            t = time.get_ticks()
-            self._clock.tick(fps_limit)
+        t = time.get_ticks()
+        self._clock.tick(fps_limit)
 
-            self.frames_per_second = self._clock.get_fps()
-            self.fps = self.frames_per_second
-            self.total_frames += 1
+        self.frames_per_second = self._clock.get_fps()
+        self.fps = self.frames_per_second
+        self.total_frames += 1
         
-            self.local_scene_time = tm.time() - self._start_time if self._start_time != 0 else 0
-            self.total_time = tm.time() - self._start_time
+        self.local_scene_time = tm.time() - self._start_time if self._start_time != 0 else 0
+        self.total_time = tm.time() - self._start_time
 
-            self.delta_time = (t - self._last) / 1000.0
-            self.held_keys = key.get_pressed()
+        self.delta_time = (t - self._last) / 1000.0
+        self.held_keys = key.get_pressed()
         
-            try: self.surf.fill(self.clear_color)
-            except: pass
-            for eve in event.get():
-                self.quit_event = eve.type == QUIT
-                if eve.type == KEYDOWN: 
-                    self.keydown_listener(key = eve.key)
-                    self.keydown = eve.key
-                    self.keyup = None
-
-                if eve.type == KEYUP:
-                    self.keyup_listener(key = eve.key)
-                    self.keyup = eve.key
-                    self.keydown = None
-            for e in self._in_scene_entities:
-                self.__checkfunc__(e.frame_function)
-                if e.enabled:
-                    e.frame_function(self = e)
-                    e.draw(self.surf)
+        try: self.surf.fill(self.clear_color)
+        except: pass
+        for eve in event.get():
+            self.quit_event = eve.type == QUIT
+            if eve.type == KEYDOWN: 
+                self.keydown_listener(key = eve.key)
+                self.keydown = eve.key
+                self.keyup = None
+            
+            if eve.type == KEYUP:
+                self.keyup_listener(key = eve.key)
+                self.keyup = eve.key
+                self.keydown = None
+        for e in self._in_scene_entities:
+            self.__checkfunc__(e.frame_function)
+            if e.enabled:
+                e.frame_function(self = e)
+                e.draw(self.surf)
         
-            for s in self._in_scene_sprites:
-                self.__checkfunc__(s.frame_function)
-                if s.enabled:
-                    s.frame_function(self = s)
-                    s.draw(self.surf)
-            try:
-                display.flip()
-            except Exception as e:
-                print(e)
-            self._last = t
-    def Create_scene(self):
+        for s in self._in_scene_sprites:
+            self.__checkfunc__(s.frame_function)
+            if s.enabled:
+                s.frame_function(self = s)
+                s.draw(self.surf)
+        try:
+            display.flip()
+        except Exception as e:
+            print(e)
+        self._last = t
+    def create_scene(self):
         "This will create a copy of the scene, use this when creating more than one scene"
         scene = Scene(surf = self.surf, clear_color = self.clear_color, keydown_listener = self.keydown_listener, keyup_listener = self.keyup_listener)
         scene._active = False
         return scene
-    def Switch_to_scene(self, scene):
+    def switch_to_scene(self, scene):
+        self.__stored__ = {"surf" : self.surf, "clear_color" : self.clear_color, "isE" : self._in_scene_entities, "isS" : self._in_scene_sprites, "Eido" : self._Eid_offset,
+                           "Sido" : self._Eid_offset, "localtime" : self.local_scene_time, "keydown_listener" : self.keydown_listener, "keyup_listener" : self.keyup_listener}
+        
+        self.surf = scene.__stored__["surf"]
+        self.clear_color = scene.__stored__["clear_color"]
+        self._in_scene_entities = scene.__stored__["isE"]
+        self._in_scene_sprites = scene.__stored__["isS"]
+        self._Eid_offset = scene.__stored__["Eido"]
+        self._Sid_offset = scene.__stored__["Sido"]
+        self.local_scene_time = scene.__stored__["localtime"]
+        self.keydown_listener = scene.__stored__["keydown_listener"]
+        self.keyup_listener = scene.__stored__["keyup_listener"]
+
+
         self._active = False
-        scene.Awake()
         scene._active = True
+        scene.Awake()
 
 def none(self):
     pass
