@@ -59,6 +59,7 @@ And however large the amount of Entities and Sprites you add, the ```while runni
 ## Frame functions
 UniPygame's frame functions is UniPygames way of updating objetcs.
 This example shows with Entities but it will also work for sprites, in the same way
+
 The way they work is as follows:
 ```python
 from UniPygame import Entity
