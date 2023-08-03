@@ -1,5 +1,6 @@
 from pygame import surface, Rect, draw, Color, display, time, event, key, font, QUIT, KEYDOWN, KEYUP, SRCALPHA
 from inspect import getfullargspec
+from random import randint
 from unipygame.utils import *
 from unipygame.exceptions import *
 import time as tm
@@ -13,8 +14,6 @@ class Scene:
         self.clear_color = clear_color
         self._in_scene_entities:list(Entity) = []
         self._in_scene_sprites:list(Sprite) = []
-        self._Eid_offset = 0
-        self._Sid_offset = 0
         self.delta_time = 0
         self._last = tm.time()
         self._start_time = 0
@@ -37,12 +36,22 @@ class Scene:
         self.keyup = None
         self.held_keys = None
 
-        self.__stored__ = {"surf" : self.surf, "clear_color" : self.clear_color, "isE" : self._in_scene_entities, "isS" : self._in_scene_sprites, "Eido" : self._Eid_offset, "Sido" : self._Eid_offset,
+        self.__stored__ = {"surf" : self.surf, "clear_color" : self.clear_color, "isE" : self._in_scene_entities, "isS" : self._in_scene_sprites,
                            "localtime" : self.local_scene_time, "keydown_listener" : self.keydown_listener, "keyup_listener" : self.keyup_listener}
     def __getfreeEid__(self):
-        return len(self._in_scene_entities) + self._Eid_offset
+        ids = [i.id for i in self._in_scene_entities]
+        free_id = randint(1000000000, 9999999999)
+        while free_id in ids:
+            free_id = randint(1000000000, 9999999999)
+
+        return free_id
     def __getfreeSid__(self):
-        return len(self._in_scene_sprites) + self._Sid_offset
+        ids = [i.id for i in self._in_scene_sprites]
+        free_id = randint(1000000000, 9999999999)
+        while free_id in ids:
+            free_id = randint(1000000000, 9999999999)
+
+        return free_id
     def __getentity__(self, index : int):
         return self._in_scene_entities[index]
     def __getbyEid__(self, id : int):
@@ -56,13 +65,11 @@ class Scene:
     def __removeentity__(self, id : int):
         try:
             self._in_scene_entities.pop(self._in_scene_entities.index(self.__getbyEid__(id)))
-            self._Eid_offset += 1
         except ValueError:
             pass
     def __removesprite__(self, id : int):
         try:
             self._in_scene_sprites.pop(self._in_scene_sprites.index(self.__getbySid__(id)))
-            self._Sid_offset += 1
         except ValueError:
             pass
     def __updateids__(self):
@@ -96,7 +103,7 @@ class Scene:
         self.total_frames += 1
         
         self.local_scene_time = tm.time() - self._start_time if self._start_time != 0 else 0
-        self.total_time = tm.time() - self._start_time
+        self.total_time = tm.time() - self._create_time
 
         self.delta_time = (t - self._last) / 1000.0
         self.held_keys = key.get_pressed()
@@ -137,15 +144,13 @@ class Scene:
         return scene
     def switch_to_scene(self, scene):
         self.surf.fill(Color(0,0,0))
-        self.__stored__ = {"surf" : self.surf, "clear_color" : self.clear_color, "isE" : self._in_scene_entities, "isS" : self._in_scene_sprites, "Eido" : self._Eid_offset,
-                           "Sido" : self._Eid_offset, "localtime" : self.local_scene_time, "keydown_listener" : self.keydown_listener, "keyup_listener" : self.keyup_listener}
+        self.__stored__ = {"surf" : self.surf, "clear_color" : self.clear_color, "isE" : self._in_scene_entities, "isS" : self._in_scene_sprites,
+                           "localtime" : self.local_scene_time, "keydown_listener" : self.keydown_listener, "keyup_listener" : self.keyup_listener}
         
         self.surf = scene.__stored__["surf"]
         self.clear_color = scene.__stored__["clear_color"]
         self._in_scene_entities = scene.__stored__["isE"]
         self._in_scene_sprites = scene.__stored__["isS"]
-        self._Eid_offset = scene.__stored__["Eido"]
-        self._Sid_offset = scene.__stored__["Sido"]
         self.local_scene_time = scene.__stored__["localtime"]
         self.keydown_listener = scene.__stored__["keydown_listener"]
         self.keyup_listener = scene.__stored__["keyup_listener"]

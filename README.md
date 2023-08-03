@@ -23,7 +23,7 @@ while running:
     if scene.quit_event:
         pygame.display.quit()
         running = False
-    
+    font1 = pygame.font.Font('freesansbold.ttf', fontsize)
     scene.Update(fps_limit = 60)
 ```
 

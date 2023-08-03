@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unipygame"
-version = "0.1"
+version = "0.11"
 description = "Pygame Unity style Entity system"
 readme = "README.md"
 authors = [{ name = "The_Herowither"}]
