@@ -1,4 +1,4 @@
-from unipygame import MultilineTextRender, Scene, Entity, Sprite, Vec2
+from commons import MultilineTextRender, Scene, Entity, Sprite, Vec2
 import pygame
 def main():
     global fontsize, font1
@@ -71,9 +71,30 @@ def main():
     
     
         scene.Update()
+def physics_main():
+    pygame.init()
+
+    surf = pygame.display.set_mode((1080,720))
+
+    scene = Scene(surf)
+    obj = Entity(scene = scene, color = pygame.Color(255,255,255), rect = pygame.Rect(100,100,50,50), ridgidbody = True, collider = True)
+    ground = Entity(scene = scene, color = pygame.Color(155,155,155), rect = pygame.Rect(100,500,100,20), ridgidbody = False, collider = True)
+
+    ground.bouncieness = 1
+
+    running = True
+    scene.Awake()
+    while running:
+        if scene.quit_event:
+            pygame.quit()
+            running = False
+            break
+    
+    
+        scene.Update()
 
 if __name__ == "__main__":
     fontsize = 32
     pygame.font.init()
     font1 = pygame.font.Font('freesansbold.ttf', fontsize)
-    main()
+    physics_main()

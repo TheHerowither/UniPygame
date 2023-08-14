@@ -1,8 +1,8 @@
 from pygame import surface, Rect, draw, Color, display, time, event, key, font, QUIT, KEYDOWN, KEYUP, SRCALPHA
 from inspect import getfullargspec
 from random import randint
-from unipygame.utils import *
-from unipygame.exceptions import *
+from utils import *
+from exceptions import *
 import time as tm
 
 
@@ -124,12 +124,16 @@ class Scene:
         for e in self._in_scene_entities:
             self.__checkfunc__(e.frame_function)
             if e.enabled:
+                if e.ridgidbody:
+                    self.__applygravity__(e)
                 e.frame_function(self = e)
                 e.draw(self.surf)
         
         for s in self._in_scene_sprites:
             self.__checkfunc__(s.frame_function)
             if s.enabled:
+                if s.ridgidbody:
+                    self.__applygravity__(s)
                 s.frame_function(self = s)
                 s.draw(self.surf)
         try:
@@ -137,6 +141,27 @@ class Scene:
         except Exception as e:
             print(e)
         self._last = t
+    def __applygravity__(self, object):
+        #Find all objects rect and put them into a list (Used for calculating collisions)
+        colliders_in_scene = [i if (i.collider and self.__getbyEid__(object.id) != i) else None for i in self._in_scene_entities]
+        [colliders_in_scene.append(c) for c in [i if (i.collider and self.__getbySid__(object.id)) else None for i in self._in_scene_sprites]]
+        while None in colliders_in_scene:
+            colliders_in_scene.pop(colliders_in_scene.index(None))
+
+        #Collision detection
+        collision = object.rect.collidelist(colliders_in_scene)
+        grounded = True if collision != -1 else False
+        
+        #Get collided object
+        try:
+            hit_object = colliders_in_scene[collision]
+        except (ValueError, IndexError):
+            hit_object = object
+
+        #weight = (object.rect.width * object.rect.height) / 10
+        object._velocity -= 0.081 if not grounded else object._velocity * (hit_object.bouncieness + 1)
+        object.position.y -= object._velocity
+    
     def create_scene(self):
         "This will create a copy of the scene, use this when creating more than one scene"
         scene = Scene(surf = self.surf, clear_color = self.clear_color, keydown_listener = self.keydown_listener, keyup_listener = self.keyup_listener)
@@ -160,11 +185,20 @@ class Scene:
         scene._active = True
         scene.Awake()
 
+class Component:
+    def __main__(self):
+        self.name : str = "component_default_name"
+    def __str__(self):
+        return self.name
+    def apply(self, object):
+        print(self.name)
+        print(object.position)
+
 def none(self):
     pass
 
 class Entity:
-    def __init__(self, scene : Scene, color : Color, rect : Rect, frame_funtion = none, awake_function = none):
+    def __init__(self, scene : Scene, color : Color, rect : Rect, frame_funtion = none, awake_function = none, ridgidbody : bool = False, collider = False):
         self.scene = scene
         self.rect = rect
         self.color = color
@@ -172,6 +206,10 @@ class Entity:
         self.enabled = True
         self.frame_function = frame_funtion
         self.awake_function = awake_function
+        self.ridgidbody = ridgidbody
+        self.collider = collider
+        self._velocity = 0
+        self.bouncieness = 0
 
         self.id = self.scene.__getfreeEid__()
         self.scene._in_scene_entities.append(self)   
@@ -189,12 +227,12 @@ class Entity:
     def Instantiate(entity, at_position : tuple = ()):
         if (len(at_position) == 2):
             entity.rect.center = at_position
-        return Entity(entity.scene, entity.color, entity.rect, entity.frame_function)
+        return Entity(entity.scene, entity.color, entity.rect, entity.frame_function, entity.awake_function, entity.components)
     def Destroy(entity):
         entity.scene.__removeentity__(entity.id)
 
 class Sprite:
-    def __init__(self, scene : Scene, image : surface.Surface, position : Vec2, frame_function = none, awake_function = none):
+    def __init__(self, scene : Scene, image : surface.Surface, position : Vec2, frame_function = none, awake_function = none, ridgidbody : bool = False, collider = False):
         self.scene = scene
         self.image = image
         self.rect = self.image.get_rect()
@@ -202,10 +240,15 @@ class Sprite:
         self.enabled = True
         self.frame_function = frame_function
         self.awake_function = awake_function
+        self.ridgidbody = ridgidbody
+        self.collider = collider
+        self._velocity = 0
+        self.bouncieness = 0
 
         self.id = self.scene.__getfreeSid__()
         self.scene._in_scene_sprites.append(self)
     def draw(self, surf : surface.Surface):
+        self.rect = self.image.get_rect()
         self.position = to_vec(self.position) if type(self.position) == tuple else self.position
         pos = self.position.to_tuple()
         self.rect.center = pos
@@ -221,7 +264,7 @@ class Sprite:
         pos = sprite.position
         if (len(at_position) == 2):
             pos = at_position
-        return Sprite(sprite.scene,  sprite.image, pos, sprite.frame_function)
+        return Sprite(sprite.scene,  sprite.image, pos, sprite.frame_function, sprite.awake_function, sprite.components)
     def Destroy(sprite):
         sprite.scene.__removesprite__(sprite.id)
 def MultilineTextRender(font_object : font.Font, text : str, color : Color, background : Color = Color(0,0,0,0)):
