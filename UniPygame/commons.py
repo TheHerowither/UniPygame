@@ -1,10 +1,14 @@
 from pygame import surface, Rect, draw, Color, display, time, event, key, font, QUIT, KEYDOWN, KEYUP, SRCALPHA
 from inspect import getfullargspec
 from random import randint
-from utils import *
-from exceptions import *
+from .utils import *
+from .exceptions import *
+from .__init__ import __version__
+from .components import *
 import time as tm
 
+
+print(f"UniPygame initialized, Installed version {__version__}, Have Fun!")
 
 def none(key):
     pass
@@ -75,24 +79,22 @@ class Scene:
     def __updateids__(self):
         for e in self._in_scene_entities:
             e.id = self._in_scene_entities.index(e)
-    def __checkfunc__(self, func):
+    def __checkfunc__(self, func, param):
         args = getfullargspec(func)[0]
-        if "self" not in args:
-            raise MissingFunctionParameterError("Missing function keyword parameter 'self'")
-    def __checkifunc__(self, func):
-        args = getfullargspec(func)[0]
-        if "key" not in args:
-            raise MissingFunctionParameterError("Missing function keyword parameter 'key'")
+        if param not in args:
+            raise MissingFunctionParameterError(f"Missing function keyword parameter '{param}'")
     def get_active(self):
         return self._active
     def Awake(self):
         "Function to be called right before the loop starts"
         self._start_time = tm.time()
         for e in self._in_scene_entities:
-            self.__checkfunc__(e.awake_function)
+            e.__instantiatecomponents__()
+            self.__checkfunc__(e.awake_function, "self")
             e.awake_function(self = e)
         for s in self._in_scene_sprites:
-            self.__checkfunc__(s.awake_function)
+            s.__instantiatecomponents__()
+            self.__checkfunc__(s.awake_function, "self")
             s.awake_function(self = s)
     def Update(self, fps_limit : int = 60):
         t = time.get_ticks()
@@ -122,18 +124,24 @@ class Scene:
                 self.keyup = eve.key
                 self.keydown = None
         for e in self._in_scene_entities:
-            self.__checkfunc__(e.frame_function)
+            self.__checkfunc__(e.frame_function, "self")
             if e.enabled:
-                if e.ridgidbody:
+                if e.has_component(Ridgidbody):
                     self.__applygravity__(e)
+                for c in e._components:
+                    self.__checkfunc__(c.apply, "object")
+                    c.apply(object = e)
                 e.frame_function(self = e)
                 e.draw(self.surf)
         
         for s in self._in_scene_sprites:
-            self.__checkfunc__(s.frame_function)
+            self.__checkfunc__(s.frame_function, "self")
             if s.enabled:
-                if s.ridgidbody:
+                if s.has_component(Ridgidbody):
                     self.__applygravity__(s)
+                for c in e._components:
+                    self.__checkfunc__(c.apply, "object")
+                    c.apply(object = s)
                 s.frame_function(self = s)
                 s.draw(self.surf)
         try:
@@ -141,26 +149,6 @@ class Scene:
         except Exception as e:
             print(e)
         self._last = t
-    def __applygravity__(self, object):
-        #Find all objects rect and put them into a list (Used for calculating collisions)
-        colliders_in_scene = [i if (i.collider and self.__getbyEid__(object.id) != i) else None for i in self._in_scene_entities]
-        [colliders_in_scene.append(c) for c in [i if (i.collider and self.__getbySid__(object.id)) else None for i in self._in_scene_sprites]]
-        while None in colliders_in_scene:
-            colliders_in_scene.pop(colliders_in_scene.index(None))
-
-        #Collision detection
-        collision = object.rect.collidelist(colliders_in_scene)
-        grounded = True if collision != -1 else False
-        
-        #Get collided object
-        try:
-            hit_object = colliders_in_scene[collision]
-        except (ValueError, IndexError):
-            hit_object = object
-
-        #weight = (object.rect.width * object.rect.height) / 10
-        object._velocity -= 0.081 if not grounded else object._velocity * (hit_object.bouncieness + 1)
-        object.position.y -= object._velocity
     
     def create_scene(self):
         "This will create a copy of the scene, use this when creating more than one scene"
@@ -185,20 +173,13 @@ class Scene:
         scene._active = True
         scene.Awake()
 
-class Component:
-    def __main__(self):
-        self.name : str = "component_default_name"
-    def __str__(self):
-        return self.name
-    def apply(self, object):
-        print(self.name)
-        print(object.position)
+
 
 def none(self):
     pass
 
 class Entity:
-    def __init__(self, scene : Scene, color : Color, rect : Rect, frame_funtion = none, awake_function = none, ridgidbody : bool = False, collider = False):
+    def __init__(self, scene : Scene, color : Color, rect : Rect, frame_funtion = none, awake_function = none, components : list = []):
         self.scene = scene
         self.rect = rect
         self.color = color
@@ -206,13 +187,22 @@ class Entity:
         self.enabled = True
         self.frame_function = frame_funtion
         self.awake_function = awake_function
-        self.ridgidbody = ridgidbody
-        self.collider = collider
-        self._velocity = 0
-        self.bouncieness = 0
+        self.components = components
+        self._components = []
 
         self.id = self.scene.__getfreeEid__()
-        self.scene._in_scene_entities.append(self)   
+        self.scene._in_scene_entities.append(self) 
+
+    def __instantiatecomponents__(self):
+        for component in self.components:
+            c = component()
+            c.id = self.components.index(component)
+            self._components.append(c)
+    
+    def get_component(self, component) -> Component:
+        return list_contains_type(self._components, component)
+    def has_component(self, component) -> Component:
+        return True if list_contains_type(self._components, component) == component else False
     
     def draw(self, surf : surface.Surface):
         self.rect.center = self.position.to_tuple()
@@ -232,7 +222,7 @@ class Entity:
         entity.scene.__removeentity__(entity.id)
 
 class Sprite:
-    def __init__(self, scene : Scene, image : surface.Surface, position : Vec2, frame_function = none, awake_function = none, ridgidbody : bool = False, collider = False):
+    def __init__(self, scene : Scene, image : surface.Surface, position : Vec2, frame_function = none, awake_function = none, components : list = []):
         self.scene = scene
         self.image = image
         self.rect = self.image.get_rect()
@@ -240,13 +230,23 @@ class Sprite:
         self.enabled = True
         self.frame_function = frame_function
         self.awake_function = awake_function
-        self.ridgidbody = ridgidbody
-        self.collider = collider
-        self._velocity = 0
-        self.bouncieness = 0
+        self.components = components
+        self._components = []
 
         self.id = self.scene.__getfreeSid__()
         self.scene._in_scene_sprites.append(self)
+
+    def __instantiatecomponents__(self):
+        for component in self.components:
+            c = component()
+            c.id = self.components.index(component)
+            self._components.append(c)
+    
+    def get_component(self, component) -> Component:
+        return list_contains_type(self._components, component)
+    def has_component(self, component) -> Component:
+        return True if list_contains_type(self._components, component) == component else False
+        
     def draw(self, surf : surface.Surface):
         self.rect = self.image.get_rect()
         self.position = to_vec(self.position) if type(self.position) == tuple else self.position
