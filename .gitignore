@@ -3,3 +3,4 @@ build
 *UniPygame.egg-info
 dist
 $HOME
+*.mp3

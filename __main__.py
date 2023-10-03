@@ -1,5 +1,5 @@
 from unipygame import *
-import pygame
+import pygame, json
 def main():
     global fontsize, font1
 
@@ -75,6 +75,7 @@ def physics_main():
     pygame.init()
 
     surf = pygame.display.set_mode((1080,720))
+    pygame.display.set_caption("UniPygame Physics Playground")
 
     scene = Scene(surf)
     obj = Entity(scene = scene, color = pygame.Color(255,255,255), rect = pygame.Rect(100,100,50,50), components=[Ridgidbody,])
@@ -85,9 +86,9 @@ def physics_main():
     running = True
     scene.Awake()
 
-    ground.get_component(Ridgidbody).simulated = False
-    ground.get_component(Ridgidbody).bouncieness = .9
-    obj.get_component(Ridgidbody).density = 1.0
+    ground.GetComponent(Ridgidbody).simulated = False
+    ground.GetComponent(Ridgidbody).bouncieness = .9
+    obj.GetComponent(Ridgidbody).density = 1.0
 
     while running:
         if scene.quit_event:
@@ -97,9 +98,64 @@ def physics_main():
     
     
         scene.Update()
+def layering_main():
+    pygame.init()
 
+    app = pygame.display.set_mode((1080,720))
+
+    def keydown(key):
+        if key == pygame.K_TAB:
+            if obj1.layer == 1: obj1.layer = 0
+            elif obj1.layer == 0: obj1.layer = 1
+            if obj2.layer == 1: obj2.layer = 0
+            elif obj2.layer == 0: obj2.layer = 1
+
+    scene = Scene(app, keydown_listener=keydown)
+    obj1 = Entity(scene, color = pygame.Color(0,155,255), rect=pygame.Rect(100,100,50,50), layer=1)
+    obj2 = Entity(scene, color = pygame.Color(255,155,0), rect=pygame.Rect(130,130,50,50), layer=0)
+
+    running = True
+    scene.Awake()
+
+    while running:
+        if scene.quit_event:
+            pygame.quit()
+            running = False
+            break
+    
+    
+        scene.Update()
+def music_main():
+    pygame.init()
+
+    app = pygame.display.set_mode((1080,720))
+
+
+    music_player = JsonPlayer("test_music.json", .05)
+
+    def awake(self):
+        music_player.playall()
+    def keydown(key):
+        if key == pygame.K_1:
+            music_player.toggle("twists")
+        if key == pygame.K_2:
+            music_player.toggle("waking-the-devil")
+    scene = Scene(app, keydown_listener=keydown)
+    Entity(scene, pygame.Color(0,0,0,0), pygame.Rect(0,0,0,0), awake_function=awake)
+
+    running = True
+    scene.Awake()
+
+    while running:
+        if scene.quit_event:
+            pygame.quit()
+            running = False
+            break
+    
+    
+        scene.Update()
 if __name__ == "__main__":
     fontsize = 32
     pygame.font.init()
     font1 = pygame.font.Font('freesansbold.ttf', fontsize)
-    physics_main()
+    music_main()

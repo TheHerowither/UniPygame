@@ -16,8 +16,8 @@ class Scene:
     def __init__(self, surf : surface.Surface, clear_color : Color = Color(0,0,0), keydown_listener = none, keyup_listener = none):
         self.surf = surf
         self.clear_color = clear_color
-        self._in_scene_entities:list(Entity) = []
-        self._in_scene_sprites:list(Sprite) = []
+        self._in_scene_entities:list[Entity] = []
+        self._in_scene_sprites:list[Sprite] = []
         self.delta_time = 0
         self._last = tm.time()
         self._start_time = 0
@@ -83,6 +83,9 @@ class Scene:
         args = getfullargspec(func)[0]
         if param not in args:
             raise MissingFunctionParameterError(f"Missing function keyword parameter '{param}'")
+    def __sortbylayers__(self, lst : list) -> list:
+        b = sorted(lst, key=lambda x: x.layer)
+        return b
     def get_active(self):
         return self._active
     def Awake(self):
@@ -110,6 +113,8 @@ class Scene:
         self.delta_time = (t - self._last) / 1000.0
         self.held_keys = key.get_pressed()
         
+        ents = self.__sortbylayers__(self._in_scene_entities)
+        sprts = self.__sortbylayers__(self._in_scene_sprites)
         try: self.surf.fill(self.clear_color)
         except: pass
         for eve in event.get():
@@ -123,22 +128,18 @@ class Scene:
                 self.keyup_listener(key = eve.key)
                 self.keyup = eve.key
                 self.keydown = None
-        for e in self._in_scene_entities:
+        for e in ents:
             self.__checkfunc__(e.frame_function, "self")
             if e.enabled:
-                if e.has_component(Ridgidbody):
-                    self.__applygravity__(e)
                 for c in e._components:
                     self.__checkfunc__(c.apply, "object")
                     c.apply(object = e)
                 e.frame_function(self = e)
                 e.draw(self.surf)
         
-        for s in self._in_scene_sprites:
+        for s in sprts:
             self.__checkfunc__(s.frame_function, "self")
             if s.enabled:
-                if s.has_component(Ridgidbody):
-                    self.__applygravity__(s)
                 for c in e._components:
                     self.__checkfunc__(c.apply, "object")
                     c.apply(object = s)
@@ -179,7 +180,7 @@ def none(self):
     pass
 
 class Entity:
-    def __init__(self, scene : Scene, color : Color, rect : Rect, frame_funtion = none, awake_function = none, components : list = []):
+    def __init__(self, scene : Scene, color : Color, rect : Rect, frame_funtion = none, awake_function = none, components : list = [], layer : int = 0):
         self.scene = scene
         self.rect = rect
         self.color = color
@@ -189,6 +190,7 @@ class Entity:
         self.awake_function = awake_function
         self.components = components
         self._components = []
+        self.layer = layer
 
         self.id = self.scene.__getfreeEid__()
         self.scene._in_scene_entities.append(self) 
@@ -199,10 +201,10 @@ class Entity:
             c.id = self.components.index(component)
             self._components.append(c)
     
-    def get_component(self, component) -> Component:
+    def GetComponent(self, component) -> Component:
         return list_contains_type(self._components, component)
-    def has_component(self, component) -> Component:
-        return True if list_contains_type(self._components, component) == component else False
+    def HasComponent(self, component) -> bool:
+        return True if type(list_contains_type(self._components, component)) == component else False
     
     def draw(self, surf : surface.Surface):
         self.rect.center = self.position.to_tuple()
@@ -222,7 +224,7 @@ class Entity:
         entity.scene.__removeentity__(entity.id)
 
 class Sprite:
-    def __init__(self, scene : Scene, image : surface.Surface, position : Vec2, frame_function = none, awake_function = none, components : list = []):
+    def __init__(self, scene : Scene, image : surface.Surface, position : Vec2, frame_function = none, awake_function = none, components : list = [], layer : int = 0):
         self.scene = scene
         self.image = image
         self.rect = self.image.get_rect()
@@ -232,6 +234,7 @@ class Sprite:
         self.awake_function = awake_function
         self.components = components
         self._components = []
+        self.layer = layer
 
         self.id = self.scene.__getfreeSid__()
         self.scene._in_scene_sprites.append(self)
@@ -242,9 +245,9 @@ class Sprite:
             c.id = self.components.index(component)
             self._components.append(c)
     
-    def get_component(self, component) -> Component:
+    def GetComponent(self, component) -> Component:
         return list_contains_type(self._components, component)
-    def has_component(self, component) -> Component:
+    def HasComponent(self, component) -> bool:
         return True if list_contains_type(self._components, component) == component else False
         
     def draw(self, surf : surface.Surface):
