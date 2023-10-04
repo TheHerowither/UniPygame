@@ -29,3 +29,5 @@ Homepage = "https://github.com/TheHerowither/UniPygame/"
 [project.gui-scripts]
 realpython = "unipygame.__main__:main"
 physics = "unipygame.__main__:physics_main"
+layering = "unipygame.__main__:layering_main"
+music = "unipygame.__main__:music_main"

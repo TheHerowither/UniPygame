@@ -1,5 +1,5 @@
 from unipygame import *
-import pygame, json
+import pygame
 def main():
     global fontsize, font1
 
