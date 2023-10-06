@@ -12,23 +12,23 @@ def main():
     def move(self):
         if scene.held_keys[pygame.K_s]:
             self.position.y += 20 * scene.delta_time
-    def keydown(key):
+    def keydown():
         global font1, fontsize
-        if key == pygame.K_1:
+        if Input.GetKeyPressed(GetKeyCode("1")):
             obj2.toggle()
-        if key == pygame.K_2:
+        if Input.GetKeyPressed(GetKeyCode("2")):
             imobj2.toggle()
     
-        if key == pygame.K_KP_MINUS:
+        if Input.GetKeyPressed(KeyCode.NumpadMinus):
             font1 = pygame.font.Font("freesansbold.ttf", fontsize - 1)
             fontsize -= 1
-        if key == pygame.K_KP_PLUS:
+        if Input.GetKeyPressed(KeyCode.NumpadPlus):
             font1 = pygame.font.Font("freesansbold.ttf", fontsize + 1)
             fontsize += 1
-        if key == pygame.K_TAB:
+        if Input.GetKeyPressed(KeyCode.Tab):
             dbg_text.toggle()
     
-        if key == pygame.K_RETURN:
+        if Input.GetKeyPressed(KeyCode.Return):
             if scene.get_active():
                 scene.switch_to_scene(scene2)
             if scene2.get_active():
@@ -37,7 +37,7 @@ def main():
     def update_text(self):
         self.image = MultilineTextRender(font1, f"Local scene time: {round(scene.local_scene_time, 3)}\nTotal time: {round(scene.total_time, 3)}\nTotal frames: {scene.total_frames}", pygame.Color(255,255,255), pygame.Color(255, 255, 255, 127))
 
-    scene = Scene(surf, keydown_listener = keydown)
+    scene = Scene(surf, update_func = keydown)
     scene2 = scene.create_scene()
 
 
@@ -52,7 +52,6 @@ def main():
     obj2 = Entity.Instantiate(obj1, (10,10))
     imobj2 = Sprite.Instantiate(imobj1, (200, 200))
 
-    running = True
 
 
     pygame.display.set_caption('UniPygame Playgroud')
@@ -63,10 +62,9 @@ def main():
 
 
     scene.Awake()
-    while running:
-        if scene.quit_event:
-            pygame.quit()
-            running = False
+    while scene.get_running():
+        if Input.quit_event:
+            scene.stop()
             break
     
     
@@ -83,17 +81,15 @@ def physics_main():
 
     
 
-    running = True
     scene.Awake()
 
     ground.GetComponent(Ridgidbody).simulated = False
     ground.GetComponent(Ridgidbody).bouncieness = .9
     obj.GetComponent(Ridgidbody).density = 1.0
 
-    while running:
-        if scene.quit_event:
+    while scene.get_running():
+        if Input.quit_event:
             pygame.quit()
-            running = False
             break
     
     
@@ -103,24 +99,22 @@ def layering_main():
 
     app = pygame.display.set_mode((1080,720))
 
-    def keydown(key):
-        if key == pygame.K_TAB:
+    def keydown():
+        if Input.GetKeyPressed(KeyCode.Tab):
             if obj1.layer == 1: obj1.layer = 0
             elif obj1.layer == 0: obj1.layer = 1
             if obj2.layer == 1: obj2.layer = 0
             elif obj2.layer == 0: obj2.layer = 1
 
-    scene = Scene(app, keydown_listener=keydown)
+    scene = Scene(app, update_func=keydown)
     obj1 = Entity(scene, color = pygame.Color(0,155,255), rect=pygame.Rect(100,100,50,50), layer=1)
     obj2 = Entity(scene, color = pygame.Color(255,155,0), rect=pygame.Rect(130,130,50,50), layer=0)
 
-    running = True
     scene.Awake()
 
-    while running:
-        if scene.quit_event:
+    while scene.get_active():
+        if Input.quit_event:
             pygame.quit()
-            running = False
             break
     
     
@@ -135,21 +129,22 @@ def music_main():
 
     def awake(self):
         music_player.playall()
-    def keydown(key):
-        if key == pygame.K_1:
-            music_player.toggle("twists")
-        if key == pygame.K_2:
-            music_player.toggle("waking-the-devil")
-    def update(self):
+    def update():
         if Input.GetKey(KeyCode.Escape):
             scene.stop()
-    scene = Scene(app, keydown_listener=keydown)
-    Entity(scene, pygame.Color(0,0,0,0), pygame.Rect(0,0,0,0), awake_function=awake, frame_funtion=update)
+        if Input.GetKeyPressed(GetKeyCode("1")):
+             music_player.toggle("twists")
+             print("Toggling song 1")
+        if Input.GetKeyPressed(GetKeyCode("2")):
+             music_player.toggle("waking-the-devil")
+             print("Toggling song 2")
+    scene = Scene(app, update_func=update)
+    Entity(scene, pygame.Color(0,0,0,0), pygame.Rect(0,0,0,0), awake_function=awake)
 
     scene.Awake()
 
     while scene.get_running():
-        if scene.quit_event:
+        if Input.quit_event:
             scene.stop()
             break
     
@@ -159,4 +154,4 @@ if __name__ == "__main__":
     fontsize = 32
     pygame.font.init()
     font1 = pygame.font.Font('freesansbold.ttf', fontsize)
-    music_main()
+    main()

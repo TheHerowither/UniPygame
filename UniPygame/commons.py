@@ -4,17 +4,17 @@ from inspect import getfullargspec
 from random import randint
 from .utils import *
 from .exceptions import *
-from .__init__ import __version__
+from .__init__ import __version__, Input
 from .components import *
 import time as tm
 
 
 print(f"UniPygame initialized, Installed version {__version__}, Have Fun!")
 
-def none(key):
+def none():
     pass
 class Scene:
-    def __init__(self, surf : surface.Surface, clear_color : Color = Color(0,0,0), keydown_listener = none, keyup_listener = none):
+    def __init__(self, surf : surface.Surface, clear_color : Color = Color(0,0,0), update_func = none, awake_func = none):
         self.surf = surf
         self.clear_color = clear_color
         self._in_scene_entities:list[Entity] = []
@@ -33,10 +33,12 @@ class Scene:
         self.frames_per_second = 0
         self.fps = 0
 
-        self.keydown_listener = keydown_listener
-        self.keyup_listener = keyup_listener
+        self.__updatefunc__ = update_func
+        self.__awake__ = awake_func
+        self.keydown_listener = Input.__setkeydown__
+        self.keyup_listener = Input.__setkeyup__
 
-        self.quit_event = None
+        self.quit_event = Input.quit_event
         self.keydown = None
         self.keyup = None
         self.held_keys = None
@@ -98,6 +100,7 @@ class Scene:
     def Awake(self):
         "Function to be called right before the loop starts"
         self._start_time = tm.time()
+        self.__awake__()
         for e in self._in_scene_entities:
             e.__instantiatecomponents__()
             self.__checkfunc__(e.awake_function, "self")
@@ -126,19 +129,22 @@ class Scene:
             print("Quitting")
             pg.quit()
             return
+        
+        self.__updatefunc__()
         try: self.surf.fill(self.clear_color)
         except: pass
-        for eve in event.get():
-            self.quit_event = eve.type == QUIT
-            if eve.type == KEYDOWN: 
-                self.keydown_listener(key = eve.key)
-                self.keydown = eve.key
-                self.keyup = None
+        self.quit_event = Input.quit_event
+        #for eve in event.get():
+            #self.quit_event = eve.type == QUIT
+            #if eve.type == KEYDOWN: 
+                #self.keydown_listener(key = eve.key)
+                #self.keydown = eve.key
+                #self.keyup = None
             
-            if eve.type == KEYUP:
-                self.keyup_listener(key = eve.key)
-                self.keyup = eve.key
-                self.keydown = None
+            #if eve.type == KEYUP:
+             #   self.keyup_listener(key = eve.key)
+                #self.keyup = eve.key
+                #self.keydown = None
         for e in ents:
             self.__checkfunc__(e.frame_function, "self")
             if e.enabled:
@@ -164,7 +170,7 @@ class Scene:
     
     def create_scene(self):
         "This will create a copy of the scene, use this when creating more than one scene"
-        scene = Scene(surf = self.surf, clear_color = self.clear_color, keydown_listener = self.keydown_listener, keyup_listener = self.keyup_listener)
+        scene = Scene(surf = self.surf, clear_color = self.clear_color, update_func=self.__updatefunc__, awake_func=self.__awake__)
         scene._active = False
         return scene
     def switch_to_scene(self, scene):
@@ -230,7 +236,7 @@ class Entity:
     def Instantiate(entity, at_position : tuple = ()):
         if (len(at_position) == 2):
             entity.rect.center = at_position
-        return Entity(entity.scene, entity.color, entity.rect, entity.frame_function, entity.awake_function, entity.components)
+        return Entity(entity.scene, entity.color, entity.rect, entity.frame_function, entity.awake_function, entity.components, entity.layer)
     def Destroy(entity):
         entity.scene.__removeentity__(entity.id)
 
@@ -278,7 +284,7 @@ class Sprite:
         pos = sprite.position
         if (len(at_position) == 2):
             pos = at_position
-        return Sprite(sprite.scene,  sprite.image, pos, sprite.frame_function, sprite.awake_function, sprite.components)
+        return Sprite(sprite.scene,  sprite.image, pos, sprite.frame_function, sprite.awake_function, sprite.components, sprite.layer)
     def Destroy(sprite):
         sprite.scene.__removesprite__(sprite.id)
 def MultilineTextRender(font_object : font.Font, text : str, color : Color, background : Color = Color(0,0,0,0)):
