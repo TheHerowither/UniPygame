@@ -1,4 +1,5 @@
 from pygame import surface, Rect, draw, Color, display, time, event, key, font, QUIT, KEYDOWN, KEYUP, SRCALPHA
+import pygame as pg
 from inspect import getfullargspec
 from random import randint
 from .utils import *
@@ -39,6 +40,8 @@ class Scene:
         self.keydown = None
         self.keyup = None
         self.held_keys = None
+
+        self.__stop__ = False
 
         self.__stored__ = {"surf" : self.surf, "clear_color" : self.clear_color, "isE" : self._in_scene_entities, "isS" : self._in_scene_sprites,
                            "localtime" : self.local_scene_time, "keydown_listener" : self.keydown_listener, "keyup_listener" : self.keyup_listener}
@@ -86,8 +89,12 @@ class Scene:
     def __sortbylayers__(self, lst : list) -> list:
         b = sorted(lst, key=lambda x: x.layer)
         return b
+    def stop(self):
+        self.__stop__ = True
     def get_active(self):
         return self._active
+    def get_running(self) -> bool:
+        return not self.__stop__
     def Awake(self):
         "Function to be called right before the loop starts"
         self._start_time = tm.time()
@@ -115,6 +122,10 @@ class Scene:
         
         ents = self.__sortbylayers__(self._in_scene_entities)
         sprts = self.__sortbylayers__(self._in_scene_sprites)
+        if self.__stop__:
+            print("Quitting")
+            pg.quit()
+            return
         try: self.surf.fill(self.clear_color)
         except: pass
         for eve in event.get():

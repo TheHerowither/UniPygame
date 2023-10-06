@@ -140,16 +140,17 @@ def music_main():
             music_player.toggle("twists")
         if key == pygame.K_2:
             music_player.toggle("waking-the-devil")
+    def update(self):
+        if Input.GetKey(KeyCode.Escape):
+            scene.stop()
     scene = Scene(app, keydown_listener=keydown)
-    Entity(scene, pygame.Color(0,0,0,0), pygame.Rect(0,0,0,0), awake_function=awake)
+    Entity(scene, pygame.Color(0,0,0,0), pygame.Rect(0,0,0,0), awake_function=awake, frame_funtion=update)
 
-    running = True
     scene.Awake()
 
-    while running:
+    while scene.get_running():
         if scene.quit_event:
-            pygame.quit()
-            running = False
+            scene.stop()
             break
     
     
