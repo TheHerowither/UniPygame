@@ -30,6 +30,11 @@ class KeyCode(Enum):
     Numpad7 = pygame.K_KP7
     Numpad8 = pygame.K_KP8
     Numpad9 = pygame.K_KP9
+
+    ArrowUp = pygame.K_UP
+    ArrowDown = pygame.K_DOWN
+    ArrowLeft = pygame.K_LEFT
+    ArrowRight = pygame.K_RIGHT
     
 def GetKeyCode(key : str) -> int:
     return KeyCode.__keys__[key]
