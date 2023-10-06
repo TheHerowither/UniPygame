@@ -88,9 +88,6 @@ while scene.get_running():
 
 ## UniPygame Input system
 Well, now you might be wondering, since the loop is always the same size, how will inputs work?
-Well for that there is a parameter in the Scene class ``Scene.keydown_listener``, this parameter needs a function into it, this function has to have a keyword argument ``key``, everytime a button is pressed, this argument will be set to the pygame key code of the pressed key, and the function will be called.
-
-An effective listener would look like this:
 ```python
 from UniPygame import Scene
 import pygame
