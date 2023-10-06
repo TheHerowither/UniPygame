@@ -17,13 +17,10 @@ scene = Scene(surf = screen, clear_color = pygame.Color(255,255,255))
 
 cube = Entity(scene = scene, color = pygame.Color(255, 0, 0), rect = pygame.Rect(100,100,100,100))
 
-running = True
 scene.Awake()
-while running:
-    if scene.quit_event:
-        pygame.display.quit()
-        running = False
-    font1 = pygame.font.Font('freesansbold.ttf', fontsize)
+while scene.get_running():
+    if Input.quit_event:
+        scene.stop()
     scene.Update(fps_limit = 60)
 ```
 
@@ -43,12 +40,10 @@ scene = Scene(surf = screen, clear_color = pygame.Color(255,255,255))
 
 image = Sprite(scene = scene, image = pygame.image.load("image.png"), position = Vec2(100,100))
 
-running = True
 scene.Awake()
-while running:
-    if scene.quit_event:
-        pygame.display.quit()
-        running = False
+while scene.get_running():
+    if Input.quit_event:
+        scene.stop()
     
     scene.Update(fps_limit = 60)
 ```
@@ -82,12 +77,10 @@ def cube_move(self):
 cube = Entity(scene = scene, color = pygame.Color(255, 0, 0), rect = pygame.Rect(100,100,100,100), frame_function = cube_move)
 
 
-running = True
 scene.Awake()
-while running:
-    if scene.quit_event:
-        pygame.display.quit()
-        running = False
+while scene.get_running():
+    if Input.quit_event:
+        scene.stop()
     
     #Now, when calling update, the cube_move function will be called
     scene.Update(fps_limit = 60)
@@ -105,17 +98,14 @@ import pygame
 
 
 pygame.init()
-def keydown(key):
-    if key == pygame.K_1:
+def keydown():
+    #Character key codes can be accessed through GetKeyCode
+    if Input.GetKeyPressed(GetKeyCode("1"))):
         print("Key 1 has been pressed")
-    if key == pygame.K_2:
-        print("Key 2 has been pressed")
-    if key == pygame.K_3:
-        print("Key 3 has been pressed")
+    #Adn special keypresses are accessed through KeyCode.<specified key>
+    if Input.GetKeyPressed(KeyCode.Return):
+        print("Key enter is pressed")
 
 screen = pygame.display.set_mode((1080, 720))
-scene = Scene(surf = screen, clear_color = pygame.Color(255,255,255), keydown_listener = keydown)
+scene = Scene(surf = screen, clear_color = pygame.Color(255,255,255), update_func = keydown)
 ```
-Also, the same works for the keyup event, using the ``Scene.keyup_listener`` parameter.
-
-But if you want continuus button presses, there is a list in the scene ``Scene.held_keys`` where you just have to index the pygame key code of the key you want to check if its pressed/held pressed, and do something with that.
