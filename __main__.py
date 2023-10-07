@@ -130,7 +130,7 @@ def music_main():
     def awake(self):
         music_player.playall()
     def update():
-        if Input.GetKey(KeyCode.Escape):
+        if Input.GetKeyPressed(KeyCode.Escape):
             scene.stop()
         if Input.GetKeyPressed(GetKeyCode("1")):
              music_player.toggle("twists")
